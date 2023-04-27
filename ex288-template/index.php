@@ -3,6 +3,7 @@
 $audiance=$_ENV["HELLO_AUDIANCE"];
 $message=$_ENV["HELLO_MESSAGE"];
 
-print $audiance, $message. "\n";
+print $audiance;
+print $message."\n";
     
 ?>
