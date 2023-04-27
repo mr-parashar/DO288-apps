@@ -1,7 +1,8 @@
 <?php
+
 audiance=$_ENV["HELLO_AUDIANCE"];
 message=$_ENV["HELLO_MESSAGE"];
 
-    print $autiance, $message. "\n";
+print $audiance, $message. "\n";
     
 ?>
