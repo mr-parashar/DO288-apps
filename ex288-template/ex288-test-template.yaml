@@ -1,0 +1,141 @@
+apiVersion: template.openshift.io/v1
+kind: Template
+metadata:
+  name: ex288-test-template
+  annotations:
+    description: A  PHP application with a MySQL database.
+    iconClass: icon-php
+    openshift.io/display-name: "EX288 Test + Template"
+    tags: php
+    template.openshift.io/long-description: "This template defines resources needed to develop a PHP application, including a build configuration, application deployment configuration, and database deployment configuration.  The database is stored in non-persistent storage, so this configuration should be used for experimental purposes only."
+    template.openshift.io/provider-display-name: Red Hat Training
+message: "The following service(s) have been created in your project: ${NAME}."
+objects:
+  - apiVersion: v1
+    kind: Service
+    metadata:
+      annotations:
+        description: "Exposes and load balances the application pods."
+      name: ${NAME}
+      labels:
+        app: ${NAME}
+    spec:
+      ports:
+        - name: web
+          port: 8080
+          targetPort: 8080
+      selector:
+        app: ${NAME}
+  - apiVersion: route.openshift.io/v1
+    kind: Route
+    metadata:
+      annotations:
+        template.openshift.io/expose-uri: http://{.spec.host}{.spec.path}
+      name: ${NAME}
+      labels:
+        app: ${NAME}
+    spec:
+      host: ${APPLICATION_DOMAIN}
+      to:
+        kind: Service
+        name: ${NAME}
+  - apiVersion: image.openshift.io/v1
+    kind: ImageStream
+    metadata:
+      annotations:
+        description: "Keeps track of changes in the application image"
+      name: ${NAME}
+      labels:
+        app: ${NAME}
+    spec:
+      lookupPolicy:
+        local: true
+  - apiVersion: build.openshift.io/v1
+    kind: BuildConfig
+    metadata:
+      annotations:
+        description: "Defines how to build the application."
+      name: ${NAME}
+      labels:
+        app: ${NAME}
+    spec:
+      output:
+        to:
+          kind: ImageStreamTag
+          name: ${NAME}:latest
+      source:
+        contextDir: ex288-template
+        git:
+          ref: ''
+          uri: https://github.com/mr-parashar/DO288-apps
+        type: Git
+      strategy:
+        sourceStrategy:
+          from:
+            kind: ImageStreamTag
+            name: php:7.4-ubi8
+            namespace: openshift
+        type: Source
+      triggers:
+        - type: ImageChange
+        - type: ConfigChange
+        - github:
+            secret: ${GITHUB_WEBHOOK_SECRET}
+          type: GitHub
+  - apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      annotations:
+        description: "Defines how to deploy the PHP application."
+      name: ${NAME}
+      labels:
+        app: ${NAME}
+    spec:
+      replicas: 1
+      selector:
+        matchLabels:
+          app: ${NAME}
+      strategy:
+        type: Recreate
+      template:
+        metadata:
+          labels:
+            app: ${NAME}
+          name: ${NAME}
+        spec:
+          containers:
+            - env:
+                - name: HELLO_AUDIANCE
+                  value: ${HELLO_AUDIANCE}
+                - name: HELLO_MESSAGE
+                  value: ${HELLO_MESSAGE}
+              image: ${NAME}:latest
+              name: php-app
+              ports:
+                - containerPort: 8080
+parameters:
+  - name: HELLO_AUDIANCE
+    displayName: Audiance
+    description: "The Audiance of the app objects defined in this template."
+    value: Engineers
+    required: true
+  - name: HELLO_MESSAGE
+    displayName: Message
+    description: "The Mesage to Audiance of the app objects defined in this template."
+    value: Namaste
+    required: true
+  - name: NAME
+    displayName: Name
+    description: "The name assigned to all of the app objects defined in this template."
+    value: php-app
+    required: true
+  - name: GITHUB_WEBHOOK_SECRET
+    displayName: GitHub Webhook Secret
+    description: "Github trigger secret.  A difficult to guess string encoded as part of the webhook URL.  Not encrypted."
+    generate: expression
+    from: '[a-zA-Z0-9]{40}'
+  - name: APPLICATION_DOMAIN
+    displayName: "Application Hostname"
+    description: "The exposed hostname that will route to the PHP app service, if left blank a value will be defaulted."
+labels:
+  template: ex288-test-template
