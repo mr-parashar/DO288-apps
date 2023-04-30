@@ -3,12 +3,12 @@ kind: Template
 metadata:
   name: ex288-test-template
   annotations:
-    description: A  PHP application with a MySQL database.
+    description: "A  PHP application with a MySQL database."
     iconClass: icon-php
     openshift.io/display-name: "EX288 Test + Template"
     tags: php
     template.openshift.io/long-description: "This template defines resources needed to develop a PHP application, including a build configuration, application deployment configuration, and database deployment configuration.  The database is stored in non-persistent storage, so this configuration should be used for experimental purposes only."
-    template.openshift.io/provider-display-name: Red Hat Training
+    template.openshift.io/provider-display-name: "Red Hat Training"
 message: "The following service(s) have been created in your project: ${NAME}."
 objects:
   - apiVersion: v1
@@ -43,7 +43,7 @@ objects:
     kind: ImageStream
     metadata:
       annotations:
-        description: "Keeps track of changes in the application image"
+        description: "Keeps track of changes in the application image."
       name: ${NAME}
       labels:
         app: ${NAME}
