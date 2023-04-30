@@ -1,0 +1,183 @@
+{
+    "kind": "List",
+    "apiVersion": "v1",
+    "metadata": {},
+    "items": [
+        {
+            "apiVersion": "v1",
+            "kind": "Service",
+            "metadata": {
+                "annotations": {
+                    "description": "Exposes and load balances the application pods"
+                },
+                "labels": {
+                    "app": "php-app",
+                    "template": "ex288-test-template"
+                },
+                "name": "php-app"
+            },
+            "spec": {
+                "ports": [
+                    {
+                        "name": "web",
+                        "port": 8080,
+                        "targetPort": 8080
+                    }
+                ],
+                "selector": {
+                    "app": "php-app"
+                }
+            }
+        },
+        {
+            "apiVersion": "route.openshift.io/v1",
+            "kind": "Route",
+            "metadata": {
+                "annotations": {
+                    "template.openshift.io/expose-uri": "http://{.spec.host}{.spec.path}"
+                },
+                "labels": {
+                    "app": "php-app",
+                    "template": "ex288-test-template"
+                },
+                "name": "php-app"
+            },
+            "spec": {
+                "host": "",
+                "to": {
+                    "kind": "Service",
+                    "name": "php-app"
+                }
+            }
+        },
+        {
+            "apiVersion": "image.openshift.io/v1",
+            "kind": "ImageStream",
+            "metadata": {
+                "annotations": {
+                    "description": "Keeps track of changes in the application image"
+                },
+                "labels": {
+                    "app": "php-app",
+                    "template": "ex288-test-template"
+                },
+                "name": "php-app"
+            },
+            "spec": {
+                "lookupPolicy": {
+                    "local": true
+                }
+            }
+        },
+        {
+            "apiVersion": "build.openshift.io/v1",
+            "kind": "BuildConfig",
+            "metadata": {
+                "annotations": {
+                    "description": "Defines how to build the application"
+                },
+                "labels": {
+                    "app": "php-app",
+                    "template": "ex288-test-template"
+                },
+                "name": "php-app"
+            },
+            "spec": {
+                "output": {
+                    "to": {
+                        "kind": "ImageStreamTag",
+                        "name": "php-app:latest"
+                    }
+                },
+                "source": {
+                    "contextDir": "ex288-template",
+                    "git": {
+                        "ref": "",
+                        "uri": "https://github.com/mr-parashar/DO288-apps"
+                    },
+                    "type": "Git"
+                },
+                "strategy": {
+                    "sourceStrategy": {
+                        "from": {
+                            "kind": "ImageStreamTag",
+                            "name": "php:7.4-ubi8",
+                            "namespace": "openshift"
+                        }
+                    },
+                    "type": "Source"
+                },
+                "triggers": [
+                    {
+                        "type": "ImageChange"
+                    },
+                    {
+                        "type": "ConfigChange"
+                    },
+                    {
+                        "github": {
+                            "secret": "JABBdkmCnFwwEtyvdCyNi1R1EJkeLLPBFoFor6Md"
+                        },
+                        "type": "GitHub"
+                    }
+                ]
+            }
+        },
+        {
+            "apiVersion": "apps/v1",
+            "kind": "Deployment",
+            "metadata": {
+                "annotations": {
+                    "description": "Defines how to deploy the PHP application"
+                },
+                "labels": {
+                    "app": "php-app",
+                    "template": "ex288-test-template"
+                },
+                "name": "php-app"
+            },
+            "spec": {
+                "replicas": 1,
+                "selector": {
+                    "matchLabels": {
+                        "app": "php-app"
+                    }
+                },
+                "strategy": {
+                    "type": "Recreate"
+                },
+                "template": {
+                    "metadata": {
+                        "labels": {
+                            "app": "php-app"
+                        },
+                        "name": "php-app"
+                    },
+                    "spec": {
+                        "containers": [
+                            {
+                                "env": [
+                                    {
+                                        "name": "HELLO_AUDIANCE",
+                                        "value": "Engineers"
+                                    },
+                                    {
+                                        "name": "HELLO_MESSAGE",
+                                        "value": "Namaste"
+                                    }
+                                ],
+                                "image": "php-app:latest",
+                                "name": "php-app",
+                                "ports": [
+                                    {
+                                        "containerPort": 8080
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                }
+            }
+        }
+    ]
+}
